@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#080b0e">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="chart.css">
   <title>Athlete OS</title>
 </head>
 <body>
@@ -48,11 +49,15 @@
         <div class="chart" aria-label="Diagramm Trainingsbelastung">
           <div class="target-zone"></div>
           <div class="grid-line line-1"></div><div class="grid-line line-2"></div><div class="grid-line line-3"></div>
-          <div class="chart-series acute">
-            <i style="--x:4%;--y:78%"></i><i style="--x:20%;--y:61%"></i><i style="--x:36%;--y:43%"></i><i style="--x:52%;--y:36%"></i><i style="--x:68%;--y:27%"></i><i style="--x:84%;--y:49%"></i><i style="--x:99%;--y:40%"></i>
-          </div>
-          <div class="chart-series chronic">
+          <svg class="chart-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <polyline class="load-line chronic-line" points="4,80 20,73 36,66 52,58 68,59 84,58 99,59"></polyline>
+            <polyline class="load-line acute-line" points="4,78 20,61 36,43 52,36 68,27 84,49 99,40"></polyline>
+          </svg>
+          <div class="chart-points chronic">
             <i style="--x:4%;--y:80%"></i><i style="--x:20%;--y:73%"></i><i style="--x:36%;--y:66%"></i><i style="--x:52%;--y:58%"></i><i style="--x:68%;--y:59%"></i><i style="--x:84%;--y:58%"></i><i style="--x:99%;--y:59%"></i>
+          </div>
+          <div class="chart-points acute">
+            <i style="--x:4%;--y:78%"></i><i style="--x:20%;--y:61%"></i><i style="--x:36%;--y:43%"></i><i style="--x:52%;--y:36%"></i><i style="--x:68%;--y:27%"></i><i style="--x:84%;--y:49%"></i><i style="--x:99%;--y:40%"></i>
           </div>
         </div>
         <div class="days"><span>Mo</span><span>Di</span><span>Mi</span><span class="active-day">Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
