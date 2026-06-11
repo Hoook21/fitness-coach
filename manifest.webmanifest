@@ -1,0 +1,9 @@
+{
+  "name": "Athlete OS",
+  "short_name": "Athlete OS",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#080b0e",
+  "theme_color": "#080b0e",
+  "description": "Persönliches Fitness- und Recovery-Dashboard"
+}
