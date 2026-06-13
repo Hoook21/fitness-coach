@@ -1,5 +1,18 @@
 # Athlete OS
 
-Mobile-first fitness and recovery dashboard prototype.
+Web-App/Projektgrundlage rund um Trainings-, Sport- oder Athletenorganisation.
 
-Currently uses demonstration data. Strava integration will follow in a later step.
+## Zweck
+
+Dieses Repository enthält den aktuellen Code-Stand für Athlete OS. Die App soll als zentrale Oberfläche für sportbezogene Daten, Auswertungen oder Organisation dienen.
+
+## Dateien
+
+- `index.html` – Hauptseite
+- `styles.css` / `chart.css` – Gestaltung
+- `app.js` – App-Logik
+- `manifest.webmanifest` – Web-App-Metadaten
+
+## Hinweis
+
+Private Notizen, lokale Projektplanung und persönliche Arbeitsstände gehören in den lokalen Projektordner und nicht direkt in dieses öffentliche Repository.
