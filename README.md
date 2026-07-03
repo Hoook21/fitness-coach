@@ -1,18 +1,60 @@
-# Athlete OS
+# Fitness Coach
 
-Web-App/Projektgrundlage rund um Trainings-, Sport- oder Athletenorganisation.
+Dieses Repository war frueher der Athlete-OS-Prototyp. Der aktuelle Projektstand ist jetzt bewusst auf eine App fokussiert: den lokalen Fitness Coach fuer Hauke.
 
-## Zweck
+Ziel: ein privater, iPhone-tauglicher Trainings- und Recovery-Coach mit lokalen Daten, serverseitigem Backup, Wetter und vorbereiteter Strava-Live-Anbindung.
 
-Dieses Repository enthält den aktuellen Code-Stand für Athlete OS. Die App soll als zentrale Oberfläche für sportbezogene Daten, Auswertungen oder Organisation dienen.
+## Projektumfang
 
-## Dateien
+- `index.html`, `styles.css`, `app.js` - PWA-Oberflaeche
+- `storage.js` - IndexedDB/localStorage-Schicht
+- `server.js` - lokaler Node-Server fuer Static Files, Backup und Strava-OAuth/API
+- `sw.js`, `manifest.webmanifest`, `icon.svg` - PWA-Support
+- `TODO.md` - offene Projektpunkte
 
-- `index.html` – Hauptseite
-- `styles.css` / `chart.css` – Gestaltung
-- `app.js` – App-Logik
-- `manifest.webmanifest` – Web-App-Metadaten
+## Start
 
-## Hinweis
+```bash
+npm run start
+```
 
-Private Notizen, lokale Projektplanung und persönliche Arbeitsstände gehören in den lokalen Projektordner und nicht direkt in dieses öffentliche Repository.
+Die App laeuft dann auf Port `5175`.
+
+Im lokalen WLAN ist der aktuelle Mac/iPhone-Link:
+
+```text
+http://192.168.178.20:5175/
+```
+
+## Strava Live-Sync
+
+Die App kann Strava serverseitig per OAuth verbinden. Dafuer im Strava-Developer-Dashboard eine App anlegen und als Callback setzen:
+
+```text
+http://<host>:5175/api/strava/callback
+```
+
+Dann den Server mit Zugangsdaten starten:
+
+```bash
+STRAVA_CLIENT_ID=... STRAVA_CLIENT_SECRET=... npm run start
+```
+
+In der App erscheint danach `Strava verbinden`. Nach dem OAuth-Login speichert der Server das Token lokal unter `data/strava-token.json`, refreshed es automatisch und liefert die aktuellen Aktivitaeten ueber `/api/strava/snapshot`. Ohne Credentials oder Verbindung nutzt die App weiter den statischen Snapshot als Fallback.
+
+Wichtig: `data/strava-token.json` und `data/backup.json` sind lokale private Laufzeitdaten und gehoeren nicht ins GitHub-Repo.
+
+## Speicher
+
+- Recovery-Werte werden pro Datum lokal gespeichert.
+- Primaer nutzt die App IndexedDB.
+- Falls IndexedDB nicht verfuegbar ist, faellt sie auf localStorage zurueck.
+- Export/Import erzeugt bzw. liest JSON-Backups.
+- Wenn die App ueber den lokalen Node-Server laeuft, synchronisiert sie automatisch ein Backup nach `data/backup.json`.
+- Beim Start laedt die App dieses Server-Backup wieder ein und fuehrt es mit dem lokalen Speicher zusammen.
+
+## Grenzen
+
+- Wetter wird live von Open-Meteo (api.open-meteo.com) fuer Wewer/Paderborn geladen; bei Fehler greift ein sicherer Fallback.
+- Strava-Daten werden live geladen, sobald `STRAVA_CLIENT_ID`/`STRAVA_CLIENT_SECRET` gesetzt sind und Strava einmal verbunden wurde. Ohne Verbindung bleibt der statische Snapshot aus dem Artifact aktiv.
+- Das automatische Backup funktioniert nur, wenn der Mac/VM-Server erreichbar ist; fuer externen Zugriff braeuchte es spaeter eine Cloud-/Domain-Loesung.

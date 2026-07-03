@@ -1,0 +1,10 @@
+{
+  "name": "fitness-coach",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lokale Fitness-Coach-PWA fuer iPhone/Safari",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check storage.js && node --check app.js"
+  }
+}

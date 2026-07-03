@@ -3,86 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#080b0e">
+  <meta name="theme-color" content="#15171c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Fitness Coach">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Fitness Coach</title>
   <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="chart.css">
-  <title>Athlete OS</title>
 </head>
 <body>
-  <main class="app">
-    <header class="topbar">
-      <div class="brand">ATHLETE <span>OS</span></div>
-      <button class="icon-button" id="alerts" aria-label="Benachrichtigungen">●</button>
-    </header>
-
-    <section class="view active" id="today">
-      <div class="intro">
-        <p class="eyebrow">Donnerstag, 11. Juni</p>
-        <h1>Guten Morgen,<br>Hauke</h1>
-      </div>
-
-      <section class="readiness">
-        <button class="score-ring" data-sheet="readiness" aria-label="Details zur Tagesform">
-          <span class="score-label">Tagesform</span>
-          <strong>82</strong>
-          <span class="score-pulse">⌁</span>
-        </button>
-        <div class="readiness-copy">
-          <p class="status">Bereit für<br>Belastung</p>
-          <p>Dein Körper ist gut erholt. Nutze den Tag für qualitatives Training.</p>
-        </div>
-      </section>
-
-      <section class="metrics" aria-label="Tageswerte">
-        <button class="metric" data-sheet="sleep"><span class="metric-icon cyan">◒</span><small>Schlaf</small><strong>7h 42m</strong><em class="cyan">Gut</em></button>
-        <button class="metric" data-sheet="recovery"><span class="metric-icon lime">♡</span><small>Erholung</small><strong>Gut</strong><em class="lime">72 HRV</em></button>
-        <button class="metric" data-sheet="load"><span class="metric-icon cyan">ϟ</span><small>Belastung</small><strong>Optimal</strong><em class="cyan">Im Zielbereich</em></button>
-      </section>
-
-      <section class="load-card">
-        <div class="section-heading">
-          <div><span class="kicker">Trainingsbelastung</span><h2>7-Tage-Verlauf</h2></div>
-          <button class="text-button" data-sheet="load">Details</button>
-        </div>
-        <div class="zone optimal"><span>Optimal</span><b>0.8 – 1.2</b></div>
-        <div class="chart" aria-label="Diagramm Trainingsbelastung">
-          <div class="target-zone"></div>
-          <div class="grid-line line-1"></div><div class="grid-line line-2"></div><div class="grid-line line-3"></div>
-          <svg class="chart-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <path class="load-line chronic-line" d="M4 80 C9 78 15 75 20 73 S31 68 36 66 S47 59 52 58 S63 59 68 59 S79 58 84 58 S94 59 99 59"></path>
-            <path class="load-line acute-line" d="M4 78 C9 73 15 66 20 61 S31 47 36 43 S47 38 52 36 S63 25 68 27 S79 47 84 49 S94 43 99 40"></path>
-          </svg>
-          <div class="chart-points chronic">
-            <i style="--x:4%;--y:80%"></i><i style="--x:20%;--y:73%"></i><i style="--x:36%;--y:66%"></i><i style="--x:52%;--y:58%"></i><i style="--x:68%;--y:59%"></i><i style="--x:84%;--y:58%"></i><i style="--x:99%;--y:59%"></i>
-          </div>
-          <div class="chart-points acute">
-            <i style="--x:4%;--y:78%"></i><i style="--x:20%;--y:61%"></i><i style="--x:36%;--y:43%"></i><i style="--x:52%;--y:36%"></i><i style="--x:68%;--y:27%"></i><i style="--x:84%;--y:49%"></i><i style="--x:99%;--y:40%"></i>
-          </div>
-        </div>
-        <div class="days"><span>Mo</span><span>Di</span><span>Mi</span><span class="active-day">Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
-        <div class="legend"><span><i class="cyan-bg"></i> Akute Belastung</span><span><i class="lime-bg"></i> Chronische Belastung</span></div>
-      </section>
-
-      <button class="recommendation" data-sheet="workout">
-        <div class="recommendation-top"><span class="run-badge">RUN</span><div><small>Heute empfohlen</small><h2>45 Min lockerer Lauf</h2></div><span class="arrow">›</span></div>
-        <p>Ein lockerer Reiz unterstützt deine Grundlagenausdauer und hält dich im Rhythmus.</p>
-        <div class="workout-facts"><span><small>Dauer</small><b>45 Min</b></span><span><small>Intensität</small><b>GA1</b></span><span><small>Terrain</small><b>Flach</b></span></div>
-      </button>
-    </section>
-
-    <section class="view" id="training"><p class="eyebrow">Diese Woche</p><h1>Training</h1><div class="summary-card"><span>Wochenziel</span><strong>3h 48m <small>/ 5h</small></strong><div class="progress"><i></i></div></div><h2 class="list-title">Letzte Aktivitäten</h2><div class="activity-list"><article><b>Lauf</b><span>Gestern · 8,4 km</span><em>48 min</em></article><article><b>Radfahrt</b><span>Dienstag · 31,2 km</span><em>1h 22m</em></article><article><b>Krafttraining</b><span>Montag · Ganzkörper</span><em>42 min</em></article></div></section>
-    <section class="view" id="coach"><p class="eyebrow">Persönliche Einordnung</p><h1>Coach</h1><div class="coach-card"><span class="coach-orb">82</span><h2>Du bist auf einem guten Weg.</h2><p>Deine Belastung steigt kontrolliert und die Erholung hält mit. Heute ist ein guter Tag für lockere Ausdauer.</p><button id="coachQuestion">Coach fragen</button></div><div class="insight"><small>Beobachtung</small><h3>Dein Schlaf stabilisiert sich</h3><p>In den letzten vier Nächten hast du durchschnittlich 24 Minuten länger geschlafen.</p></div></section>
-    <section class="view" id="profile"><p class="eyebrow">Einstellungen</p><h1>Profil</h1><div class="profile-card"><div class="avatar">HH</div><h2>Hauke</h2><p>Ausdauer · Allgemeine Fitness</p></div><div class="settings"><button>Strava verbinden <span>Verbinden</span></button><button>Schlafdaten <span>Manuell</span></button><button>Trainingsziel <span>5h / Woche</span></button></div></section>
-  </main>
-
-  <nav class="bottom-nav">
-    <button class="active" data-view="today"><span>⌂</span>Heute</button><button data-view="training"><span>▦</span>Training</button><button data-view="coach"><span>◎</span>Coach</button><button data-view="profile"><span>○</span>Profil</button>
-  </nav>
-
-  <div class="sheet-backdrop" id="sheetBackdrop"></div>
-  <aside class="sheet" id="sheet" aria-live="polite"><div class="sheet-handle"></div><button class="sheet-close" id="sheetClose">Schließen</button><div id="sheetContent"></div></aside>
-  <div class="toast" id="toast">Noch keine neuen Hinweise.</div>
+  <main id="root"><div style="padding:40px 20px;color:#8b93a1;font-family:sans-serif;font-size:15px;">Lädt…</div></main>
+  <footer>FITNESS COACH · LOKALE PWA · WEWER / PADERBORN</footer>
+  <script>
+    window.onerror = function(msg, src, line, col, err) {
+      var root = document.getElementById("root");
+      if (root) root.innerHTML = '<div style="padding:32px 20px;color:#ff5a1f;font-family:sans-serif;"><b>Fehler beim Laden</b><br><span style="font-size:13px;color:#8b93a1;">' + String(msg) + '</span></div>';
+    };
+    window.addEventListener("unhandledrejection", function(ev) {
+      var root = document.getElementById("root");
+      var msg = ev.reason && ev.reason.message ? ev.reason.message : String(ev.reason);
+      if (root && root.textContent.trim() === "Lädt…") root.innerHTML = '<div style="padding:32px 20px;color:#ff5a1f;font-family:sans-serif;"><b>Fehler beim Laden</b><br><span style="font-size:13px;color:#8b93a1;">' + msg + '</span></div>';
+    });
+  </script>
+  <script src="storage.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

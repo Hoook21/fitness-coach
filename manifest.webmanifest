@@ -1,9 +1,19 @@
 {
-  "name": "Athlete OS",
-  "short_name": "Athlete OS",
+  "name": "Fitness Coach",
+  "short_name": "Fitness",
+  "description": "Lokaler Fitness Coach mit Recovery- und Trainingsauswertung",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#080b0e",
-  "theme_color": "#080b0e",
-  "description": "Persönliches Fitness- und Recovery-Dashboard"
+  "orientation": "portrait",
+  "background_color": "#15171c",
+  "theme_color": "#15171c",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
