@@ -639,6 +639,99 @@ function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[char]));
 }
 
+function openStravaModal() {
+  const col = stravaState.live ? "var(--green)" : stravaState.connected ? "var(--blue)" : "var(--amber)";
+  const label = stravaState.live ? "LIVE" : stravaState.connected ? "VERBUNDEN" : stravaState.configured ? "NICHT VERBUNDEN" : "NICHT EINGERICHTET";
+  let actions = "";
+  if (!stravaState.live && stravaState.authUrl) {
+    actions += `<div class="data-actions"><button class="data-btn" id="stravaModalConnect">Mit Strava verbinden</button></div>`;
+  }
+  if (stravaState.connected || stravaState.live) {
+    actions += `<div class="data-actions"><button class="data-btn danger" id="stravaModalDisconnect">Strava trennen</button></div>`;
+  }
+  showPopup(
+    `<div class="pop-eyebrow" style="color:${col};">Strava Verbindung</div>
+     <div class="pop-value" style="color:${col};">${label}</div>
+     <div class="pop-body" style="margin-top:10px;">${escapeHtml(stravaState.detail)}</div>${actions}`,
+    col
+  );
+  const connectBtn = document.getElementById("stravaModalConnect");
+  if (connectBtn && stravaState.authUrl) {
+    connectBtn.addEventListener("click", () => { window.location.href = stravaState.authUrl; });
+  }
+  const disconnectBtn = document.getElementById("stravaModalDisconnect");
+  if (disconnectBtn) {
+    disconnectBtn.addEventListener("click", async () => {
+      disconnectBtn.textContent = "Trennen…";
+      disconnectBtn.disabled = true;
+      await fetch("/api/strava/disconnect", { method: "POST" }).catch(() => {});
+      closePopup();
+      await loadStravaSnapshot();
+    });
+  }
+}
+
+function openDataModal() {
+  const backupInfo = serverBackupActive
+    ? "<b>Automatisches Backup aktiv.</b> Daten werden lokal und auf dem Server gesichert."
+    : "<b>Lokal gespeichert.</b> IndexedDB mit localStorage-Fallback. Server-Backup wird aktiv, sobald der Server erreichbar ist.";
+  showPopup(
+    `<div class="pop-eyebrow" style="color:var(--blue);">Daten &amp; Backup</div>
+     <div class="pop-body" style="margin:12px 0 16px;">${backupInfo}</div>
+     <div class="data-actions">
+       <button class="data-btn" id="modalExport">JSON exportieren</button>
+       <label class="data-btn" for="modalImportFile">JSON importieren</label>
+       <input id="modalImportFile" type="file" accept="application/json" hidden>
+     </div>`,
+    "var(--blue)"
+  );
+  document.getElementById("modalExport")?.addEventListener("click", exportData);
+  document.getElementById("modalImportFile")?.addEventListener("change", async (e) => {
+    await importData(e);
+    closePopup();
+  });
+}
+
+function openSettingsModal() {
+  showPopup(
+    `<div class="pop-eyebrow" style="color:var(--purple);">Einstellungen</div>
+     <div class="pop-value" style="color:var(--muted);font-size:28px;line-height:1.1;">Bald verfügbar</div>
+     <div class="pop-body" style="margin-top:12px;">Einstellungen werden in einer späteren Version hinzugefügt.</div>`,
+    "var(--purple)"
+  );
+}
+
+function initMenu() {
+  const btn = document.getElementById("menuBtn");
+  const dropdown = document.getElementById("menuDropdown");
+  if (!btn || !dropdown) return;
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = dropdown.classList.toggle("open");
+    btn.classList.toggle("open", open);
+    btn.setAttribute("aria-expanded", String(open));
+  });
+
+  document.addEventListener("click", () => {
+    dropdown.classList.remove("open");
+    btn.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+  });
+
+  dropdown.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const action = e.target.closest("[data-action]")?.dataset.action;
+    if (!action) return;
+    dropdown.classList.remove("open");
+    btn.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+    if (action === "strava") openStravaModal();
+    else if (action === "data") openDataModal();
+    else if (action === "settings") openSettingsModal();
+  });
+}
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(() => {});
@@ -646,6 +739,7 @@ if ("serviceWorker" in navigator) {
 }
 
 render();
+initMenu();
 initDataSync();
 loadStravaSnapshot();
 fetchWeather().then(function(w) { weather = w; render(); }).catch(function(err) { console.error("fetchWeather failed:", err); });

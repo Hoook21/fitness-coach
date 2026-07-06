@@ -462,6 +462,69 @@ body {
   line-height: 1;
 }
 
+/* ---- Dropdown menu ---- */
+.menu-btn {
+  position: fixed;
+  top: calc(14px + env(safe-area-inset-top));
+  right: 14px;
+  z-index: 200;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.menu-btn.open,
+.menu-btn:active { color: var(--text); background: var(--panel-2); border-color: var(--orange); }
+
+.menu-dropdown {
+  position: fixed;
+  top: calc(56px + env(safe-area-inset-top));
+  right: 14px;
+  z-index: 199;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 196px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  transform-origin: top right;
+  transform: scale(.92) translateY(-4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .15s cubic-bezier(.2,.8,.3,1), opacity .15s;
+}
+.menu-dropdown.open {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: .06em;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .1s;
+}
+.menu-item:active { background: var(--panel-2); }
+
 /* ---- Footer ---- */
 footer {
   text-align: center;

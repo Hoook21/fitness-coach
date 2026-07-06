@@ -270,6 +270,11 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (pathname === '/api/strava/disconnect' && req.method === 'POST') {
+    try { fs.unlinkSync(STRAVA_TOKEN_FILE); } catch { }
+    return jsonOk(res, { ok: true });
+  }
+
   if (pathname === '/api/strava/snapshot') {
     try {
       const status = stravaStatus(req);
