@@ -1,13 +1,11 @@
 # TODO
 
-## Offen
+## Erledigt
 
-- Strava-App am PC erstellen und Fitness Coach live verbinden.
+- Strava-App erstellt und Fitness Coach live verbunden.
+- Strava-Live-Sync funktioniert bisher zuverlässig.
 
 ## Kontext
 
-- Strava-Callback-Domain: `192.168.178.20`
-- Callback-URL fuer die App: `http://192.168.178.20:5175/api/strava/callback`
-- Danach Server mit `STRAVA_CLIENT_ID` und `STRAVA_CLIENT_SECRET` starten.
-- In der PWA auf `Strava verbinden` tippen und OAuth abschliessen.
-
+- Callback-URL: http://192.168.178.20:5175/api/strava/callback
+- Server läuft mit STRAVA_CLIENT_ID / STRAVA_CLIENT_SECRET.
