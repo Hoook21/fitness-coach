@@ -9,6 +9,7 @@ const DATA_DIR    = path.join(ROOT, 'data');
 const BACKUP_FILE = path.join(DATA_DIR, 'backup.json');
 const STRAVA_TOKEN_FILE  = path.join(DATA_DIR, 'strava-token.json');
 const STRAVA_CONFIG_FILE = path.join(DATA_DIR, 'strava-config.json');
+const STRAVA_ZONES_FILE  = path.join(DATA_DIR, 'athlete-zones.json');
 const STRAVA_SCOPE = 'read,activity:read_all';
 
 let stravaConfig = { clientId: '', clientSecret: '' };
@@ -139,12 +140,40 @@ async function fetchStravaActivities() {
   return data;
 }
 
-function activityLoad(activity) {
-  const effort = Number(activity.relative_effort);
-  if (Number.isFinite(effort) && effort > 0) return effort;
-  const distanceKm = (Number(activity.distance) || 0) / 1000;
-  const minutes = (Number(activity.moving_time) || 0) / 60;
-  return Math.max(1, distanceKm * 2 + minutes * 0.25);
+async function fetchStravaAthleteZones() {
+  const token = await getValidStravaToken();
+  const resp = await fetch('https://www.strava.com/api/v3/athlete/zones', {
+    headers: { Authorization: `Bearer ${token.access_token}` },
+  });
+  const data = await resp.json().catch(() => null);
+  if (!resp.ok || !data) return null;
+  return data;
+}
+
+function readAthleteZones() {
+  const zones = readJsonFile(STRAVA_ZONES_FILE);
+  if (!zones) return null;
+  const hrZones = zones.heart_rate && Array.isArray(zones.heart_rate.zones) ? zones.heart_rate.zones : null;
+  if (!hrZones || hrZones.length === 0) return null;
+  return {
+    heartRateZones: hrZones,
+    fetchedAt: zones.fetchedAt || null,
+    source: 'strava',
+  };
+}
+
+function storeAthleteZones(apiZones) {
+  if (!apiZones || !apiZones.heart_rate || !Array.isArray(apiZones.heart_rate.zones)) {
+    return false;
+  }
+  const zones = {
+    heart_rate: apiZones.heart_rate,
+    power: apiZones.power || null,
+    fetchedAt: new Date().toISOString(),
+    source: 'strava',
+  };
+  writeJsonFile(STRAVA_ZONES_FILE, zones);
+  return true;
 }
 
 function heartrateFromActivity(activity) {
@@ -157,6 +186,61 @@ function heartrateFromActivity(activity) {
   if (Number.isFinite(avg) && avg > 0) out.avg = Math.round(avg);
   if (Number.isFinite(max) && max > 0) out.max = Math.round(max);
   return out;
+}
+
+function zoneIndexForHr(value, zoneUpperBounds) {
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  for (let i = 0; i < zoneUpperBounds.length; i += 1) {
+    if (value <= zoneUpperBounds[i]) return i + 1;
+  }
+  return zoneUpperBounds.length;
+}
+
+function computeHeartrateLoad(activity, zones) {
+  // Vereinfachter, dokumentierter HF-Zonen-Load.
+  // Wir kennen pro Aktivität nur Durchschnitts-HF, Max-HF und Dauer – nicht die
+  // Zeit pro Zone. Daher wird der Durchschnitt einer Zone zugeordnet und die
+  // Dauer mit einem exponentiellen Zonen-Faktor gewichtet. Der Max-HF-Cap
+  // verhindert, dass eine Aktivität mit kurzem Spike als hochintensiv gilt.
+  // Keine medizinische TRIMP; Ruhepuls und Geschlecht sind Strava nicht
+  // bekannt, daher bleibt der Score absichtlich konservativ.
+  const bounds = zones && Array.isArray(zones.heartRateZones) ? zones.heartRateZones : null;
+  if (!bounds || bounds.length === 0) return { load: 0, source: 'none' };
+
+  const hr = heartrateFromActivity(activity);
+  if (!hr.avg) return { load: 0, source: 'none' };
+
+  const minutes = (Number(activity.moving_time) || 0) / 60;
+  if (minutes <= 0) return { load: 0, source: 'none' };
+
+  const avgZone = zoneIndexForHr(hr.avg, bounds);
+  const maxZone = zoneIndexForHr(hr.max || hr.avg, bounds);
+  const effectiveZone = Math.min(avgZone + 0.2 * Math.max(0, maxZone - avgZone), bounds.length);
+  // Edwards-ähnliche Gewichtung: Zone 1 = 1, Zone 2 = 2, Zone 3 = 3, Zone 4 = 4, Zone 5 = 5.
+  const weight = Math.max(1, effectiveZone);
+  const load = Math.round(minutes * weight);
+  return { load: Math.max(1, load), source: 'hr_zones' };
+}
+
+function activityLoad(activity, zones) {
+  // 1. Strava Suffer Score / relative effort ist die beste Load-Quelle, wenn verfügbar.
+  const effort = Number(activity.relative_effort);
+  if (Number.isFinite(effort) && effort > 0) {
+    return { load: effort, source: 'relative_effort' };
+  }
+
+  // 2. Wenn athletenweite HF-Zonen vorliegen und die Aktivität HF-Daten hat,
+  //    berechnen wir einen HF-Zonen-Load. Das ist deutlich realistischer als
+  //    eine reine Dauer*Distanz-Schätzung.
+  const hrLoad = computeHeartrateLoad(activity, zones);
+  if (hrLoad.load > 0) {
+    return { load: hrLoad.load, source: hrLoad.source };
+  }
+
+  // 3. Fallback: klassische Dauer+Distanz-Heuristik.
+  const distanceKm = (Number(activity.distance) || 0) / 1000;
+  const minutes = (Number(activity.moving_time) || 0) / 60;
+  return { load: Math.max(1, distanceKm * 2 + minutes * 0.25), source: 'estimate' };
 }
 
 function computeFitnessTrend(dailyLoads) {
@@ -185,7 +269,7 @@ function computeFitnessTrend(dailyLoads) {
   };
 }
 
-function buildStravaSnapshot(activities) {
+function buildStravaSnapshot(activities, zones) {
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
   const sorted = [...activities].sort((a, b) => new Date(b.start_date || b.start_date_local) - new Date(a.start_date || a.start_date_local));
@@ -197,7 +281,8 @@ function buildStravaSnapshot(activities) {
     const started = new Date(activity.start_date || activity.start_date_local);
     if (Number.isNaN(started.getTime())) continue;
     const day = started.toISOString().slice(0, 10);
-    loadsByDay.set(day, (loadsByDay.get(day) || 0) + activityLoad(activity));
+    const { load } = activityLoad(activity, zones);
+    loadsByDay.set(day, (loadsByDay.get(day) || 0) + load);
     const ageDays = Math.max(0, Math.floor((now - started.getTime()) / dayMs));
     const type = activity.sport_type || activity.type || 'Sport';
     if (sportLastSeen[type] == null || ageDays < sportLastSeen[type]) sportLastSeen[type] = ageDays;
@@ -212,29 +297,44 @@ function buildStravaSnapshot(activities) {
   const trend = computeFitnessTrend(dailyLoads);
   const weekKm = week.reduce((sum, activity) => sum + (Number(activity.distance) || 0), 0) / 1000;
 
-  return {
+  const snapshot = {
     ...trend,
     streak: 0,
     weekKm: Math.round(weekKm * 10) / 10,
     weekCount: week.length,
     sportLastSeen,
-    activities: sorted.slice(0, 8).map((activity) => ({
-      id: String(activity.id),
-      name: activity.name || 'Strava Aktivitaet',
-      sport_type: activity.sport_type || activity.type || 'Sport',
-      start_local: activity.start_date_local || activity.start_date,
-      summary: {
-        distance: Number(activity.distance) || 0,
-        moving_time: Number(activity.moving_time) || 0,
-        elevation_gain: Number(activity.total_elevation_gain) || 0,
-        relative_effort: Number(activity.relative_effort) || undefined,
-        total_calories: Number(activity.calories) || undefined,
-        heartrate: heartrateFromActivity(activity),
-      },
-    })),
+    activities: sorted.slice(0, 8).map((activity) => {
+      const { load, source } = activityLoad(activity, zones);
+      return {
+        id: String(activity.id),
+        name: activity.name || 'Strava Aktivitaet',
+        sport_type: activity.sport_type || activity.type || 'Sport',
+        start_local: activity.start_date_local || activity.start_date,
+        summary: {
+          distance: Number(activity.distance) || 0,
+          moving_time: Number(activity.moving_time) || 0,
+          elevation_gain: Number(activity.total_elevation_gain) || 0,
+          relative_effort: Number(activity.relative_effort) || undefined,
+          total_calories: Number(activity.calories) || undefined,
+          heartrate: heartrateFromActivity(activity),
+          load,
+          load_source: source,
+        },
+      };
+    }),
     source: 'strava-live',
     updatedAt: new Date().toISOString(),
   };
+
+  if (zones && Array.isArray(zones.heartRateZones)) {
+    snapshot.heartrateZones = {
+      zones: zones.heartRateZones,
+      fetchedAt: zones.fetchedAt,
+      source: zones.source,
+    };
+  }
+
+  return snapshot;
 }
 
 loadStravaConfig();
@@ -297,6 +397,7 @@ const server = http.createServer(async (req, res) => {
 
   if (pathname === '/api/strava/disconnect' && req.method === 'POST') {
     try { fs.unlinkSync(STRAVA_TOKEN_FILE); } catch { }
+    try { fs.unlinkSync(STRAVA_ZONES_FILE); } catch { }
     return jsonOk(res, { ok: true });
   }
 
@@ -305,8 +406,13 @@ const server = http.createServer(async (req, res) => {
       const status = stravaStatus(req);
       if (!status.configured) return jsonOk(res, { ok: false, reason: 'not_configured', status });
       if (!status.connected) return jsonOk(res, { ok: false, reason: 'not_connected', status });
-      const activities = await fetchStravaActivities();
-      return jsonOk(res, { ok: true, status: stravaStatus(req), snapshot: buildStravaSnapshot(activities) });
+      const [activities, apiZones] = await Promise.all([
+        fetchStravaActivities(),
+        fetchStravaAthleteZones().catch(() => null),
+      ]);
+      const zonesStored = storeAthleteZones(apiZones);
+      const zones = zonesStored ? readAthleteZones() : readAthleteZones();
+      return jsonOk(res, { ok: true, status: stravaStatus(req), snapshot: buildStravaSnapshot(activities, zones) });
     } catch (err) {
       return jsonOk(res, { ok: false, reason: 'strava_error', message: err.message || 'Strava failed', status: stravaStatus(req) });
     }
@@ -378,4 +484,12 @@ if (require.main === module) {
   });
 }
 
-module.exports = { computeFitnessTrend, buildStravaSnapshot };
+module.exports = {
+  computeFitnessTrend,
+  buildStravaSnapshot,
+  activityLoad,
+  computeHeartrateLoad,
+  zoneIndexForHr,
+  readAthleteZones,
+  storeAthleteZones,
+};
