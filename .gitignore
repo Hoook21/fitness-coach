@@ -1,5 +1,10 @@
+# Logs
+fitness-coach.log
+*.log
+
+# Runtime data
+*.pid
 data/
-server.log
-.env
-.DS_Store
-node_modules/
+
+# Temporary/user data
+outbox/
